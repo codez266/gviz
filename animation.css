@@ -1,0 +1,32 @@
+.controls{
+	position:fixed;
+	bottom:0;
+	background:black;
+	font-size:32px;
+	width:100%;
+	padding:0.2em;
+	padding-left:3em;
+	color:white;
+}
+.controls span{
+	margin:0 5px;
+}
+.controls span:hover{
+	color:grey;
+	cursor:pointer;
+	text-shadow: 0 0 10px #fff, 0 0 10px #fff, 0 0 30px #fff, 0 0 40px #274be7, 0 0 20px #274be7, 0 0 20px #274be7, 0 0 30px #274be7, 0 0 30px #274be7;
+}
+.controls input{
+	color:black;
+}
+
+.node {
+		    fill: #ccc;
+		    stroke: #fff;
+		    stroke-width: 2px;
+		}
+
+		.link {
+		    stroke: #777;
+		    stroke-width: 1px;
+		}

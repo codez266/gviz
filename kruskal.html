@@ -1,0 +1,251 @@
+<html>
+	<head>
+  <script src='d3.min.js'></script>
+	<script src="graph.js"></script>
+	<script src="animation.js"></script>
+	<link rel="stylesheet" type="text/css" href="animation.css"/>
+	<link rel="stylesheet" type="text/css" href="post1/Article/static/frontend/bootstrap/css/bootstrap.css"/>
+		<meta charset='utf-8'>
+    <title>Force Layout Example 1</title>
+	</head>
+	<body>
+    <button onclick="doBFS();">Start Dijkstra</button>
+    <script>
+var color = ["blue","red","black"];
+			var graph = {
+  "nodes":[
+    {"name":"23","group":1,"visited": 0,"adj":[],"color":"blue","d":1000},
+    {"name":"42","group":2,"visited": 0,"adj":[],"color":"blue","d":1000},
+    {"name":"11","group":1,"visited": 0,"adj":[],"color":"blue","d":1000},
+    {"name":"21","group":3,"visited": 0,"adj":[],"color":"blue","d":1000},
+    {"name":"10","group":4,"visited": 0,"adj":[],"color":"blue","d":1000},
+    {"name":"8","group":4,"visited": 0,"adj":[],"color":"blue","d":1000},
+    {"name":"33","group":4,"visited": 0,"adj":[],"color":"blue","d":1000},
+    {"name":"44","group":4,"visited": 0,"adj":[],"color":"blue","d":1000},
+  ],
+  "links":[
+    {"source":0,"target":1,"color":"blue","w":3},
+    {"source":1,"target":2,"color":"blue","w":5},
+    {"source":2,"target":3,"color":"blue","w":2},
+    {"source":3,"target":5,"color":"blue","w":7},
+    {"source":5,"target":4,"color":"blue","w":8},
+    {"source":4,"target":7,"color":"blue","w":3},
+    {"source":5,"target":6,"color":"blue","w":9},
+    {"source":6,"target":7,"color":"blue","w":11},
+  ]
+};
+			var g = new G.Graph (graph.nodes,graph.links,1);
+			//g.generateAdjacency();
+			function init(g){
+				for ( var e in g.edges ) {
+					var edge = g.edges[e];
+					edge.opacity = 0;
+				}
+			}
+			function makeSet ( node ) {
+				node.paren = node;
+				node.rank = 0;
+			}
+			function findSet ( node ) {
+				var n = node;
+				while ( n.paren != n ) {
+					n = n.paren;
+				}
+				return n;
+			}
+			function union ( n1, n2 ) {
+				if( n1.rank > n2.rank ) {
+					n2 = findSet( n2 );
+					n2.paren = n1;
+				} else {
+					n1 = findSet( n1 );
+					n1.paren = n2;
+				}
+			}
+			function kruskal( g ) {
+				g.sortEdges();
+				for ( var v in g.nodes ) {
+					var vertex = g.nodes[v];
+					makeSet( vertex );
+				}
+				for ( var e in g.edges ) {
+					var edge = g.edges[e];
+					var u = edge.source;
+					var v = edge.target;
+					//console.log(u);
+					if( findSet( u ) != findSet( v ) ) {
+						union( u,v );
+						var o
+						g.animation.anim.push([{"node":edge,val:"opacity","src":0,"dest":1}]);
+					}
+				}
+			}
+			init(g);
+		var width = 840,
+		height = 580;
+		var svg = d3.select('body').append('svg')
+    .attr('width', width)
+    .attr('height', height);
+    	var force = d3.layout.force()
+    .size([width, height])
+    .linkDistance(300)
+    .charge(-350)
+    .nodes(g.nodes).links(g.edges)
+    .on("tick",tick);
+    /*var link = svg.selectAll('.link')
+    .data(g.edges)
+    .enter().append('line')
+    .attr('class', 'link');*/
+    svg.append("svg:defs").selectAll("marker")
+    .data(["end"])      // Different link/path types can be defined here
+  .enter().append("svg:marker")    // This section adds in the arrows
+    .attr("id", String)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 28)
+    .attr("refY", 0)
+    .attr("markerWidth", 16)
+    .attr("markerHeight", 16)
+    .attr("orient", "auto")
+  .append("svg:path")
+    .attr("d", "M0,-5L10,0L0,5");
+
+		var link = svg.selectAll(".link")
+    .data(g.edges)
+    .enter()
+    .append('g')
+    .attr('class','link')
+    var path=svg.selectAll('.link').append('path');
+    path.attr({'d': function(d) {return 'M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y},
+           'class':'edgepath',
+           'fill-opacity':1,
+           'stroke-opacity':1,
+           'stroke':function(d,i){return d.stroke},
+           'marker-end': 'url(#end)',
+           'opacity':function(d){return d.opacity},
+           'id':function(d,i) {return 'edgepath'+i}});
+
+		var edgelabels=link.append('text')
+        .style("pointer-events", "none")
+        .attr({'class':'edgelabel',
+               'id':function(d,i){return 'edgelabel'+i},
+               'dx':50,
+               'dy':0,
+               'font-size':18,
+               'stroke':function(d,i){return d.stroke},
+               'opacity':function(d){return d.opacity},
+             });
+
+      edgelabels.append('textPath')
+      .attr('xlink:href',function(d,i) {return '#edgepath'+i})
+      .style("pointer-events", "none")
+      .text(function(d,i){return d.w});
+
+
+    var node = svg.selectAll('.node')
+    .data(g.nodes)
+    .enter().append('svg')
+    .attr('class','node');
+node.append("circle")
+    .attr("r", width/30)
+    .style("fill", function (d) {
+    return d.color;})
+    ;
+    	node.append("text")
+      .attr("dx", -3)
+      .attr("dy", ".35em")
+      .text(function(d) { return d.d })
+      .style("stroke", "orange");
+
+	function update(){
+    var node = svg.selectAll('.node')
+    .data(g.nodes);
+    var link = svg.selectAll('.link')
+    .data(g.edges);
+
+    link.selectAll('path')
+    .attr({'opacity':function(d,i){return d.opacity}});
+
+		link.selectAll('text')
+    .attr({'class':'edgelabel',
+               'opacity':function(d,i){return d.opacity}
+           });
+	}
+
+force.on('end', function() {
+
+    // When this function executes, the force layout
+    // calculations have concluded. The layout will
+    // have set various properties in our nodes and
+    // links objects that we can use to position them
+    // within the SVG container.
+
+    // First let's reposition the nodes. As the force
+    // layout runs it updates the `x` and `y` properties
+    // that define where the node should be centered.
+    // To move the node, we set the appropriate SVG
+    // attributes to their new values. We also have to
+    // give the node a non-zero radius so that it's visible
+    // in the container.
+
+    d3.selectAll("circle").attr("r",width/30).attr("cx", function (d) {
+        return d.x;
+    })
+        .attr("cy", function (d) {
+        return d.y;
+    });
+
+    // We also need to update positions of the links.
+    // For those elements, the force layout sets the
+    // `source` and `target` properties, specifying
+    // `x` and `y` values in each case.
+
+    /*link.attr('x1', function(d) { return d.source.x; })
+        .attr('y1', function(d) { return d.source.y; })
+        .attr('x2', function(d) { return d.target.x; })
+        .attr('y2', function(d) { return d.target.y; });*/
+    link.selectAll('path').attr('d',function(d){return 'M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y})
+     .attr('marker-end', 'url(#end)');
+        //update();
+});
+function tick() {
+  /*link.attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });*/
+      link.selectAll('path').attr('d',function(d){return 'M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y});
+
+
+  d3.selectAll("circle").attr("cx", function (d) {
+        return d.x;
+    })
+        .attr("cy", function (d) {
+        return d.y;
+    });
+    d3.selectAll("text").attr("x", function (d) {
+        return d.x;
+    })
+        .attr("y", function (d) {
+        return d.y;
+    });
+}
+		force.start();
+		function startAnim(){
+      g.generateAdjacency();
+  g.sortEdges();
+  kruskal(g);
+  g.animation.startAnimation(update,1000);
+  console.log(g.edges[0]);
+}
+    </script>
+    <div class="controls">
+      <div>
+      <span class="glyphicon glyphicon-step-backward"></span>
+        <span class="glyphicon glyphicon-play-circle" onclick="startAnim();"></span>
+      <span class="glyphicon glyphicon-stop"></span>
+        <span class="glyphicon glyphicon-step-forward"></span>
+        <span class="glyphicon glyphicon-refresh"></span>
+        <input type="text" />
+      </div>
+    </div>
+    </body>
+</html>
